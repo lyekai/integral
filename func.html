@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>微積分練習生成器 - 簡單 / 中等 / 困難模式</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- MathJax Configuration and Script -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .btn-key {
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.12s ease-in-out;
+    }
+    .btn-key:active {
+      transform: scale(0.93);
+    }
+    /* Custom scrollbar for math containers */
+    .math-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+    .math-scroll::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 9999px;
+    }
+    .math-scroll::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen py-6 px-3 sm:px-6 flex flex-col items-center">
+
+  <!-- App Main Container -->
+  <div class="max-w-4xl w-full space-y-6">
+    
+    <!-- Header with Streak Counter -->
+    <header class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="text-center md:text-left space-y-1">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-sky-300 to-indigo-400">
+          微積分練習生成器
+        </h1>
+        <p class="text-slate-400 text-xs sm:text-sm">
+          包含定積分、基礎不定積分、分部積分 (Integration by Parts) 與部分分式 (Partial Fractions)
+        </p>
+      </div>
+
+      <!-- Stats / Streak Badge -->
+      <div class="flex items-center gap-3 bg-slate-950 border border-slate-800 py-2.5 px-4 rounded-xl shrink-0">
+        <div class="flex items-center gap-1.5 text-amber-400 font-bold text-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-amber-400" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.431.67-.654 1.343-.76 2.008a9.42 9.42 0 00-.015.35c-.062.66-.08 1.187-.08 1.187s-.183-.22-.355-.436a5.58 5.58 0 00-.982-1.01 1 1 0 00-1.547.747c-.22.812-.28 1.83.08 2.805a8.7 8.7 0 001.077 2.028c.83 1.22 2.012 2.378 3.518 2.766a5.717 5.717 0 002.397.031c1.334-.236 2.457-1.042 3.195-2.131a6.6 6.6 0 00.932-2.328 1 1 0 00-1.121-1.192 3.96 3.96 0 01-1.458-.093 3.984 3.984 0 01-1.393-.728 5.86 5.86 0 01-1.187-1.402c-.282-.444-.436-.927-.514-1.385a4.84 4.84 0 01-.012-.321z" clip-rule="evenodd" />
+          </svg>
+          <span id="streak-counter">連續答對：0 題</span>
+        </div>
+        <div class="h-4 w-[1px] bg-slate-800"></div>
+        <div class="text-xs text-slate-400">
+          總答對: <span id="total-correct" class="text-teal-300 font-bold">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mode Selector Tabs -->
+    <div class="grid grid-cols-3 gap-2 p-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-inner text-xs sm:text-sm">
+      <button id="tab-easy" onclick="switchMode('easy')" class="py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-teal-600 to-sky-600 text-white shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        簡單 (定積分)
+      </button>
+
+      <button id="tab-medium" onclick="switchMode('medium')" class="py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+        </svg>
+        中等 (基本技巧)
+      </button>
+
+      <button id="tab-hard" onclick="switchMode('hard')" class="py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        困難 (進階技巧)
+      </button>
+    </div>
+
+    <!-- Main Problem Display Card -->
+    <main class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 shadow-xl space-y-6">
+      
+      <div class="flex flex-col items-center justify-center space-y-3 border-b border-slate-800 pb-6">
+        <div class="flex items-center gap-2">
+          <span id="mode-badge" class="text-xs font-semibold tracking-wider uppercase bg-teal-900/60 text-teal-300 px-3 py-1 rounded-full border border-teal-700/50">
+            簡單模式：二次多項式定積分
+          </span>
+          <span id="topic-tag" class="hidden text-xs font-semibold bg-indigo-950 text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-800">
+            分部積分法
+          </span>
+        </div>
+
+        <!-- Math Problem Render Box -->
+        <div id="math-problem" class="text-2xl sm:text-3xl text-teal-200 min-h-[75px] flex items-center justify-center w-full math-scroll overflow-x-auto py-2">
+          $$\int_{0}^{1} (x^2 - 3x + 2) \, dx$$
+        </div>
+      </div>
+
+      <!-- Action Control Buttons -->
+      <div class="flex flex-wrap gap-3 justify-center items-center">
+        <button onclick="generateProblem()" class="bg-gradient-to-r from-teal-600 to-sky-600 hover:from-teal-500 hover:to-sky-500 text-white font-bold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-teal-500/20 active:scale-95 transition-all duration-200 flex items-center gap-2 text-sm sm:text-base">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 01-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+          </svg>
+          下一題
+        </button>
+
+        <button onclick="toggleSolution()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-2.5 px-5 rounded-xl border border-slate-700 shadow transition-all duration-200 flex items-center gap-2 text-sm sm:text-base">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+          </svg>
+          <span id="text-toggle-solution">查看詳細解答</span>
+        </button>
+      </div>
+
+      <!-- Interactive Answer Area with Live Render & Keypad -->
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 sm:p-6 space-y-4 shadow-inner">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <label class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            作答輸入區
+          </label>
+          <span id="mode-input-hint" class="text-xs text-amber-300/90 bg-amber-950/40 border border-amber-800/50 px-2.5 py-1 rounded-md">
+            💡 請輸入最簡分數或整數（例如：31/2）
+          </span>
+        </div>
+
+        <!-- Input Field & Live Preview Display -->
+        <div class="space-y-3">
+          <div class="relative flex items-center">
+            <input type="text" id="user-answer" placeholder="按下方按鍵或鍵盤輸入答案..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-400 font-mono text-base sm:text-lg pr-12" oninput="updateLivePreview()">
+            <button onclick="clearAnswerInput()" title="清空輸入" class="absolute right-3 text-slate-400 hover:text-slate-200 p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Real-Time MathJax Render Box -->
+          <div class="bg-slate-900/60 border border-slate-800 rounded-lg p-3 min-h-[50px] flex items-center justify-between text-slate-300 text-sm">
+            <span class="text-slate-500 text-xs shrink-0 mr-2">公式預覽：</span>
+            <div id="live-preview" class="math-scroll overflow-x-auto text-teal-300 text-base font-semibold">
+              <span class="text-slate-600 italic">無內容</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feedback Alert Box -->
+        <div id="answer-feedback" class="hidden text-sm font-medium rounded-xl p-3.5 border transition-all"></div>
+
+        <!-- Enhanced Virtual Keypad Panel -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4 space-y-2.5 shadow-md">
+          <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between border-b border-slate-800 pb-2">
+            <span>工程計算機按鍵區</span>
+            <span class="text-slate-500 font-normal normal-case">實體鍵盤亦可同步輸入</span>
+          </div>
+
+          <!-- Keypad Grid -->
+          <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1.5 sm:gap-2">
+            
+            <!-- Mathematical Terms & Symbols -->
+            <button onclick="keypadInsert('+ C')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">+ C</button>
+            <button onclick="keypadInsert('x')" class="btn-key bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2 text-sm font-bold shadow-sm">x</button>
+            <button onclick="keypadInsert('/')" class="btn-key bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2 text-sm font-bold shadow-sm">/</button>
+            <button onclick="keypadInsert('²')" class="btn-key bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2 text-sm font-bold shadow-sm">x²</button>
+            <button onclick="keypadInsert('^')" class="btn-key bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2 text-sm font-bold shadow-sm">^</button>
+            <button onclick="keypadInsert('ln|x|')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">ln|x|</button>
+            <button onclick="keypadInsert('ln')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">ln</button>
+            <button onclick="keypadInsert('|x|')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">|x|</button>
+
+            <!-- Exponential & Trigonometric -->
+            <button onclick="keypadInsert('e^x')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">e^x</button>
+            <button onclick="keypadInsert('e')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">e</button>
+            <button onclick="keypadInsert('sinx')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">sinx</button>
+            <button onclick="keypadInsert('cosx')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">cosx</button>
+            <button onclick="keypadInsert('tanx')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">tanx</button>
+            <button onclick="keypadInsert('sec')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">sec</button>
+            <button onclick="keypadInsert('csc')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">csc</button>
+            <button onclick="keypadInsert('cot')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">cot</button>
+
+            <!-- Digits 7,8,9, Parentheses & Backspace -->
+            <button onclick="keypadInsert('7')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">7</button>
+            <button onclick="keypadInsert('8')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">8</button>
+            <button onclick="keypadInsert('9')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">9</button>
+            <button onclick="keypadInsert('(')" class="btn-key bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-2 text-base font-bold shadow-sm">(</button>
+            <button onclick="keypadInsert(')')" class="btn-key bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-2 text-base font-bold shadow-sm">)</button>
+            <button onclick="keypadInsert('-')" class="btn-key bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2 text-sm font-bold shadow-sm">-</button>
+            <button onclick="keypadBackspace()" class="btn-key col-span-2 bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-800/60 rounded-lg py-2 text-sm font-bold shadow-sm flex items-center justify-center gap-1">⌫ 倒退</button>
+
+            <!-- Digits 4,5,6, Operators & Clear -->
+            <button onclick="keypadInsert('4')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">4</button>
+            <button onclick="keypadInsert('5')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">5</button>
+            <button onclick="keypadInsert('6')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">6</button>
+            <button onclick="keypadInsert('+')" class="btn-key bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-2 text-base font-bold shadow-sm">+</button>
+            <button onclick="keypadInsert('*')" class="btn-key bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-2 text-base font-bold shadow-sm">×</button>
+            <button onclick="keypadInsert('.')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">.</button>
+            <button onclick="clearAnswerInput()" class="btn-key col-span-2 bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 rounded-lg py-2 text-sm font-bold shadow-sm">C 清空</button>
+
+            <!-- Digits 1,2,3, Zero & Submit -->
+            <button onclick="keypadInsert('1')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">1</button>
+            <button onclick="keypadInsert('2')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">2</button>
+            <button onclick="keypadInsert('3')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">3</button>
+            <button onclick="keypadInsert('0')" class="btn-key col-span-2 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">0</button>
+            <button onclick="checkAnswer()" class="btn-key col-span-3 bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-500 hover:to-indigo-500 text-white font-bold rounded-lg py-2.5 text-base shadow-md active:scale-95 transition">送出答案</button>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Detailed Solution Step Breakdown Container -->
+      <div id="solution-section" class="hidden border-t border-slate-800 pt-6 space-y-4">
+        <h2 class="text-xl font-bold text-teal-300 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          解答與詳細步驟
+        </h2>
+
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-5 text-slate-200">
+          
+          <div class="space-y-1">
+            <div class="text-xs font-semibold text-teal-400">步驟 1：題目拆解與策略設定</div>
+            <div id="step-1-math" class="math-scroll overflow-x-auto py-1 text-base sm:text-lg"></div>
+          </div>
+
+          <div class="space-y-1 border-t border-slate-800/80 pt-3">
+            <div class="text-xs font-semibold text-teal-400">步驟 2：核心公式與中間推導</div>
+            <div id="step-2-math" class="math-scroll overflow-x-auto py-1 text-base sm:text-lg"></div>
+          </div>
+
+          <div id="step-3-container" class="space-y-1 border-t border-slate-800/80 pt-3">
+            <div id="step-3-title" class="text-xs font-semibold text-teal-400">步驟 3：代入計算</div>
+            <div id="step-3-math" class="math-scroll overflow-x-auto py-1 text-base sm:text-lg"></div>
+          </div>
+
+          <div class="space-y-1 border-t border-slate-800/80 pt-3">
+            <div class="text-xs font-semibold text-teal-400">步驟 4：最終解答</div>
+            <div id="step-4-math" class="math-scroll overflow-x-auto py-1 text-base sm:text-lg font-bold text-teal-200"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    // State Management
+    let currentMode = 'easy';
+    let currentProblem = null;
+    let streakCount = 0;
+    let totalCorrectCount = 0;
+
+    // GCD Math Helper
+    function gcd(a, b) {
+      a = Math.abs(a);
+      b = Math.abs(b);
+      while (b) {
+        let t = b;
+        b = a % b;
+        a = t;
+      }
+      return a;
+    }
+
+    // Exact Fraction Handling Class
+    class Fraction {
+      constructor(num, den = 1) {
+        if (den === 0) throw new Error("Denominator cannot be 0");
+        if (den < 0) {
+          num = -num;
+          den = -den;
+        }
+        const g = gcd(num, den);
+        this.num = num / g;
+        this.den = den / g;
+      }
+
+      add(f) {
+        return new Fraction(this.num * f.den + f.num * this.den, this.den * f.den);
+      }
+
+      sub(f) {
+        return new Fraction(this.num * f.den - f.num * this.den, this.den * f.den);
+      }
+
+      toTex() {
+        if (this.den === 1) return `${this.num}`;
+        if (this.num < 0) return `-\\frac{${Math.abs(this.num)}}{${this.den}}`;
+        return `\\frac{${this.num}}{${this.den}}`;
+      }
+
+      toCanonicalString() {
+        if (this.den === 1) return `${this.num}`;
+        return `${this.num}/${this.den}`;
+      }
+    }
+
+    function randIntNonZero(min, max) {
+      let val = 0;
+      while (val === 0) {
+        val = Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+      return val;
+    }
+
+    // Keypad Input Functions
+    function keypadInsert(text) {
+      const input = document.getElementById('user-answer');
+      input.focus();
+      input.value += text;
+      updateLivePreview();
+    }
+
+    function keypadBackspace() {
+      const input = document.getElementById('user-answer');
+      input.value = input.value.slice(0, -1);
+      updateLivePreview();
+    }
+
+    function clearAnswerInput() {
+      document.getElementById('user-answer').value = '';
+      updateLivePreview();
+      document.getElementById('answer-feedback').classList.add('hidden');
+    }
+
+    // Real-Time Math Preview Renderer
+    function updateLivePreview() {
+      const val = document.getElementById('user-answer').value.trim();
+      const previewEl = document.getElementById('live-preview');
+
+      if (!val) {
+        previewEl.innerHTML = `<span class="text-slate-600 italic">無內容</span>`;
+        return;
+      }
+
+      let tex = val
+        .replace(/²/g, '^2')
+        .replace(/\*/g, ' \\cdot ')
+        .replace(/ln\|x\|/gi, '\\ln|x|')
+        .replace(/ln\(x\)/gi, '\\ln(x)')
+        .replace(/e\^x/gi, 'e^x')
+        .replace(/e\^\{([^}]+)\}/gi, 'e^{$1}')
+        .replace(/sinx/gi, '\\sin x')
+        .replace(/cosx/gi, '\\cos x')
+        .replace(/tanx/gi, '\\tan x')
+        .replace(/sec\^2x/gi, '\\sec^2 x')
+        .replace(/csc\^2x/gi, '\\csc^2 x')
+        .replace(/secx/gi, '\\sec x')
+        .replace(/cscx/gi, '\\csc x')
+        .replace(/cotx/gi, '\\cot x');
+
+      if (val.includes('/') && !val.includes('ln') && !val.includes('sin') && !val.includes('cos') && !val.includes('e^')) {
+        const parts = val.split('/');
+        if (parts.length === 2 && parts[0].trim() && parts[1].trim()) {
+          tex = `\\frac{${parts[0].trim()}}{${parts[1].trim()}}`;
+        }
+      }
+
+      previewEl.innerHTML = `$${tex}$`;
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([previewEl]);
+      }
+    }
+
+    // Mode Selector Handler
+    function switchMode(mode) {
+      currentMode = mode;
+
+      const tabEasy = document.getElementById('tab-easy');
+      const tabMedium = document.getElementById('tab-medium');
+      const tabHard = document.getElementById('tab-hard');
+      const modeBadge = document.getElementById('mode-badge');
+      const modeHint = document.getElementById('mode-input-hint');
+      const topicTag = document.getElementById('topic-tag');
+      const keyFuncEls = document.querySelectorAll('.key-func');
+
+      // Reset Active Tab Styles
+      [tabEasy, tabMedium, tabHard].forEach(tab => {
+        tab.className = "py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60";
+      });
+
+      if (mode === 'easy') {
+        tabEasy.className = "py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-teal-600 to-sky-600 text-white shadow-lg";
+        modeBadge.className = "text-xs font-semibold tracking-wider uppercase bg-teal-900/60 text-teal-300 px-3 py-1 rounded-full border border-teal-700/50";
+        modeBadge.innerText = "簡單模式：二次多項式定積分";
+        modeHint.innerText = "💡 請輸入最簡分數或整數（例如：31/2）";
+        topicTag.classList.add('hidden');
+        keyFuncEls.forEach(el => el.classList.add('opacity-40'));
+
+      } else if (mode === 'medium') {
+        tabMedium.className = "py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-lg";
+        modeBadge.className = "text-xs font-semibold tracking-wider uppercase bg-sky-900/60 text-sky-300 px-3 py-1 rounded-full border border-sky-700/50";
+        modeBadge.innerText = "中等模式：微積分常見函數不定積分";
+        modeHint.innerText = "💡 請包含 + C（例如：3ln|x| + C 或 -2cosx + C）";
+        topicTag.classList.add('hidden');
+        keyFuncEls.forEach(el => el.classList.remove('opacity-40'));
+
+      } else { // Hard Mode
+        tabHard.className = "py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg";
+        modeBadge.className = "text-xs font-semibold tracking-wider uppercase bg-purple-900/60 text-purple-300 px-3 py-1 rounded-full border border-purple-700/50";
+        modeBadge.innerText = "困難模式：進階積分技巧 (IBP & Partial Fractions)";
+        modeHint.innerText = "💡 請以 x 函數表示並包含 + C (如: x*e^x - e^x + C)";
+        topicTag.classList.remove('hidden');
+        keyFuncEls.forEach(el => el.classList.remove('opacity-40'));
+      }
+
+      generateProblem();
+    }
+
+    // Helper to format polynomials
+    function formatPoly(A, B, C) {
+      let str = "";
+      if (A === 1) str += "x^2";
+      else if (A === -1) str += "-x^2";
+      else str += `${A}x^2`;
+
+      if (B > 0) str += B === 1 ? " + x" : ` + ${B}x`;
+      else if (B < 0) str += B === -1 ? " - x" : ` - ${Math.abs(B)}x`;
+
+      if (C > 0) str += ` + ${C}`;
+      else if (C < 0) str += ` - ${Math.abs(C)}`;
+
+      return str;
+    }
+
+    function formatAntiDerivEasy(A, B, C) {
+      const fA = new Fraction(A, 3);
+      const fB = new Fraction(B, 2);
+
+      let parts = [];
+      let termA = (fA.den === 1) ? (fA.num === 1 ? "x^3" : (fA.num === -1 ? "-x^3" : `${fA.num}x^3`)) : fA.toTex() + "x^3";
+      parts.push(termA);
+
+      let termB = "";
+      if (fB.num > 0) termB = `+ ${fB.toTex()}x^2`;
+      else termB = `- ${fB.sub(new Fraction(0)).toTex().replace('-', '')}x^2`;
+      parts.push(termB);
+
+      let termC = C > 0 ? `+ ${C === 1 ? '' : C}x` : `- ${Math.abs(C) === 1 ? '' : Math.abs(C)}x`;
+      parts.push(termC);
+
+      return parts.join(" ");
+    }
+
+    function evalAntiDeriv(A, B, C, x) {
+      const term1 = new Fraction(A * Math.pow(x, 3), 3);
+      const term2 = new Fraction(B * Math.pow(x, 2), 2);
+      const term3 = new Fraction(C * x, 1);
+      return term1.add(term2).add(term3);
+    }
+
+    // Problem Generator Selector
+    function generateProblem() {
+      clearAnswerInput();
+
+      if (currentMode === 'easy') generateEasyProblem();
+      else if (currentMode === 'medium') generateMediumProblem();
+      else generateHardProblem();
+
+      renderProblem();
+    }
+
+    // 1. Easy Mode Problem Generator
+    function generateEasyProblem() {
+      const r1 = Math.floor(Math.random() * 15) - 7;
+      let r2 = Math.floor(Math.random() * 15) - 7;
+      while (r2 === r1) r2 = Math.floor(Math.random() * 15) - 7;
+
+      const a = Math.min(r1, r2);
+      const b = Math.max(r1, r2);
+      const A = randIntNonZero(-3, 3);
+      const B = randIntNonZero(-6, 6);
+      const C = randIntNonZero(-8, 8);
+
+      const Fb = evalAntiDeriv(A, B, C, b);
+      const Fa = evalAntiDeriv(A, B, C, a);
+      const valFrac = Fb.sub(Fa);
+
+      currentProblem = {
+        mode: 'easy',
+        a, b, A, B, C, valFrac,
+        canonicalAnswer: valFrac.toCanonicalString()
+      };
+    }
+
+    // 2. Medium Mode Problem Generator
+    function generateMediumProblem() {
+      const type = Math.floor(Math.random() * 7);
+      const A = randIntNonZero(-5, 5);
+
+      let integrandTex = "", answerTex = "", step2Tex = "";
+      let canonicalRegexes = [], primaryAnswerStr = "";
+
+      switch (type) {
+        case 0: // A/x
+          integrandTex = A === 1 ? "\\frac{1}{x}" : (A === -1 ? "-\\frac{1}{x}" : `\\frac{${A}}{x}`);
+          primaryAnswerStr = A === 1 ? "ln|x| + C" : (A === -1 ? "-ln|x| + C" : `${A}ln|x| + C`);
+          answerTex = A === 1 ? "\\ln|x| + C" : (A === -1 ? "-\\ln|x| + C" : `${A}\\ln|x| + C`);
+          step2Tex = `\\int \\frac{k}{x} \\, dx = k \\ln|x| + C`;
+          canonicalRegexes = [new RegExp(`^${A === 1 ? '' : (A === -1 ? '-' : A)}\\s*(ln\\|x\\||lnx|ln\\(x\\))\\s*\\+\\s*c$`, 'i')];
+          break;
+
+        case 1: // A e^x
+          integrandTex = A === 1 ? "e^x" : (A === -1 ? "-e^x" : `${A} e^x`);
+          primaryAnswerStr = A === 1 ? "e^x + C" : (A === -1 ? "-e^x + C" : `${A}e^x + C`);
+          answerTex = A === 1 ? "e^x + C" : (A === -1 ? "-e^x + C" : `${A} e^x + C`);
+          step2Tex = `\\int e^x \\, dx = e^x + C`;
+          canonicalRegexes = [new RegExp(`^${A === 1 ? '' : (A === -1 ? '-' : A)}\\s*e\\^x\\s*\\+\\s*c$`, 'i')];
+          break;
+
+        case 2: // A sin x
+          integrandTex = A === 1 ? "\\sin x" : (A === -1 ? "-\\sin x" : `${A} \\sin x`);
+          const coeffCos = -A;
+          primaryAnswerStr = coeffCos === 1 ? "cosx + C" : (coeffCos === -1 ? "-cosx + C" : `${coeffCos}cosx + C`);
+          answerTex = coeffCos === 1 ? "\\cos x + C" : (coeffCos === -1 ? "-\\cos x + C" : `${coeffCos} \\cos x + C`);
+          step2Tex = `\\int \\sin x \\, dx = -\\cos x + C`;
+          canonicalRegexes = [new RegExp(`^${coeffCos === 1 ? '' : (coeffCos === -1 ? '-' : coeffCos)}\\s*(cosx|cos\\(x\\))\\s*\\+\\s*c$`, 'i')];
+          break;
+
+        case 3: // A cos x
+          integrandTex = A === 1 ? "\\cos x" : (A === -1 ? "-\\cos x" : `${A} \\cos x`);
+          primaryAnswerStr = A === 1 ? "sinx + C" : (A === -1 ? "-sinx + C" : `${A}sinx + C`);
+          answerTex = A === 1 ? "\\sin x + C" : (A === -1 ? "-\\sin x + C" : `${A} \\sin x + C`);
+          step2Tex = `\\int \\cos x \\, dx = \\sin x + C`;
+          canonicalRegexes = [new RegExp(`^${A === 1 ? '' : (A === -1 ? '-' : A)}\\s*(sinx|sin\\(x\\))\\s*\\+\\s*c$`, 'i')];
+          break;
+
+        case 4: // A sec^2 x
+          integrandTex = A === 1 ? "\\sec^2 x" : (A === -1 ? "-\\sec^2 x" : `${A} \\sec^2 x`);
+          primaryAnswerStr = A === 1 ? "tanx + C" : (A === -1 ? "-tanx + C" : `${A}tanx + C`);
+          answerTex = A === 1 ? "\\tan x + C" : (A === -1 ? "-\\tan x + C" : `${A} \\tan x + C`);
+          step2Tex = `\\int \\sec^2 x \\, dx = \\tan x + C`;
+          canonicalRegexes = [new RegExp(`^${A === 1 ? '' : (A === -1 ? '-' : A)}\\s*(tanx|tan\\(x\\))\\s*\\+\\s*c$`, 'i')];
+          break;
+
+        case 5: // A csc^2 x
+          integrandTex = A === 1 ? "\\csc^2 x" : (A === -1 ? "-\\csc^2 x" : `${A} \\csc^2 x`);
+          const coeffCot = -A;
+          primaryAnswerStr = coeffCot === 1 ? "cotx + C" : (coeffCot === -1 ? "-cotx + C" : `${coeffCot}cotx + C`);
+          answerTex = coeffCot === 1 ? "\\cot x + C" : (coeffCot === -1 ? "-\\cot x + C" : `${coeffCot} \\cot x + C`);
+          step2Tex = `\\int \\csc^2 x \\, dx = -\\cot x + C`;
+          canonicalRegexes = [new RegExp(`^${coeffCot === 1 ? '' : (coeffCot === -1 ? '-' : coeffCot)}\\s*(cotx|cot\\(x\\))\\s*\\+\\s*c$`, 'i')];
+          break;
+
+        case 6: // A sec x tan x
+          integrandTex = A === 1 ? "\\sec x \\tan x" : (A === -1 ? "-\\sec x \\tan x" : `${A} \\sec x \\tan x`);
+          primaryAnswerStr = A === 1 ? "secx + C" : (A === -1 ? "-secx + C" : `${A}secx + C`);
+          answerTex = A === 1 ? "\\sec x + C" : (A === -1 ? "- \\sec x + C" : `${A} \\sec x + C`);
+          step2Tex = `\\int \\sec x \\tan x \\, dx = \\sec x + C`;
+          canonicalRegexes = [new RegExp(`^${A === 1 ? '' : (A === -1 ? '-' : A)}\\s*(secx|sec\\(x\\))\\s*\\+\\s*c$`, 'i')];
+          break;
+      }
+
+      currentProblem = {
+        mode: 'medium',
+        A, type, integrandTex, answerTex, step2Tex, canonicalRegexes, primaryAnswerStr
+      };
+    }
+
+    // 3. Hard Mode Problem Generator (IBP & Partial Fractions)
+    function generateHardProblem() {
+      const isIBP = Math.random() < 0.55; // 55% IBP, 45% Partial Fractions
+
+      if (isIBP) {
+        // Integration by Parts
+        const ibpType = Math.floor(Math.random() * 4);
+        const a = randIntNonZero(-3, 3);
+
+        let integrandTex = "", uTex = "", dvTex = "", duTex = "", vTex = "";
+        let answerTex = "", primaryAnswerStr = "";
+        let canonicalRegexes = [];
+
+        if (ibpType === 0) { // ∫ x e^{ax} dx => (x/a)e^{ax} - (1/a^2)e^{ax} + C
+          integrandTex = a === 1 ? "x e^x" : (a === -1 ? "x e^{-x}" : `x e^{${a}x}`);
+          uTex = "x";
+          dvTex = a === 1 ? "e^x dx" : `e^{${a}x} dx`;
+          duTex = "dx";
+          vTex = a === 1 ? "e^x" : (a === -1 ? "-e^{-x}" : `\\frac{1}{${a}} e^{${a}x}`);
+
+          const term1 = a === 1 ? "x e^x" : (a === -1 ? "-x e^{-x}" : `\\frac{x}{${a}} e^{${a}x}`);
+          const aSquare = a * a;
+          const term2 = a === 1 ? "- e^x" : `- \\frac{1}{${aSquare}} e^{${a}x}`;
+
+          answerTex = `${term1} ${term2} + C`;
+          primaryAnswerStr = a === 1 ? "x*e^x - e^x + C" : `(x/${a})*e^(${a}x) - (1/${aSquare})*e^(${a}x) + C`;
+
+          // Dynamic RegEx pattern matching for variations
+          if (a === 1) {
+            canonicalRegexes = [
+              /^x\*?e\^x-e\^x\+c$/i,
+              /^\(x-1\)\*?e\^x\+c$/i,
+              /^e\^x\*?\(x-1\)\+c$/i,
+              /^-e\^x\+x\*?e\^x\+c$/i
+            ];
+          } else {
+            canonicalRegexes = [
+              new RegExp(`^(${a === -1 ? '-' : ''}x(\\/|\\*)${Math.abs(a) === 1 ? '' : Math.abs(a)})\\*?e\\^\\(?${a}x\\)?-?.*\\+c$`, 'i'),
+              new RegExp(`^.*e\\^\\(?${a}x\\)?.*\\+c$`, 'i')
+            ];
+          }
+
+        } else if (ibpType === 1) { // ∫ x sin(ax) dx => -(x/a)cos(ax) + (1/a^2)sin(ax) + C
+          integrandTex = a === 1 ? "x \\sin x" : `x \\sin(${a}x)`;
+          uTex = "x";
+          dvTex = a === 1 ? "\\sin x dx" : `\\sin(${a}x) dx`;
+          duTex = "dx";
+          vTex = a === 1 ? "-\\cos x" : `-\\frac{1}{${a}} \\cos(${a}x)`;
+
+          const aSquare = a * a;
+          answerTex = a === 1 
+            ? "-x \\cos x + \\sin x + C" 
+            : `-\\frac{x}{${a}} \\cos(${a}x) + \\frac{1}{${aSquare}} \\sin(${a}x) + C`;
+
+          primaryAnswerStr = a === 1 ? "-x*cosx + sinx + C" : `-(x/${a})cos(${a}x) + (1/${aSquare})sin(${a}x) + C`;
+
+          canonicalRegexes = [
+            new RegExp(`^-?x(\\/|\\*|)?.*cos.*\\+.*sin.*\\+c$`, 'i'),
+            new RegExp(`^.*sin.*-.*x.*cos.*\\+c$`, 'i')
+          ];
+
+        } else if (ibpType === 2) { // ∫ x cos(ax) dx => (x/a)sin(ax) + (1/a^2)cos(ax) + C
+          integrandTex = a === 1 ? "x \\cos x" : `x \\cos(${a}x)`;
+          uTex = "x";
+          dvTex = a === 1 ? "\\cos x dx" : `\\cos(${a}x) dx`;
+          duTex = "dx";
+          vTex = a === 1 ? "\\sin x" : `\\frac{1}{${a}} \\sin(${a}x)`;
+
+          const aSquare = a * a;
+          answerTex = a === 1 
+            ? "x \\sin x + \\cos x + C" 
+            : `\\frac{x}{${a}} \\sin(${a}x) + \\frac{1}{${aSquare}} \\cos(${a}x) + C`;
+
+          primaryAnswerStr = a === 1 ? "x*sinx + cosx + C" : `(x/${a})sin(${a}x) + (1/${aSquare})cos(${a}x) + C`;
+
+          canonicalRegexes = [
+            new RegExp(`^.*x.*sin.*\\+.*cos.*\\+c$`, 'i'),
+            new RegExp(`^.*cos.*\\+.*x.*sin.*\\+c$`, 'i')
+          ];
+
+        } else { // ∫ x ln(x) dx => (x^2 / 2) ln(x) - x^2 / 4 + C
+          integrandTex = "x \\ln x";
+          uTex = "\\ln x";
+          dvTex = "x dx";
+          duTex = "\\frac{1}{x} dx";
+          vTex = "\\frac{x^2}{2}";
+
+          answerTex = "\\frac{x^2}{2} \\ln x - \\frac{x^2}{4} + C";
+          primaryAnswerStr = "(x^2/2)ln(x) - x^2/4 + C";
+
+          canonicalRegexes = [
+            /^(x\^2\/2|\(x\^2\/2\)|0\.5x\^2)\*?(lnx|ln\|x\||ln\(x\))-(x\^2\/4|\(x\^2\/4\)|0\.25x\^2)\+c$/i,
+            /^-?(x\^2\/4|\(x\^2\/4\)\+.*ln.*)\+c$/i,
+            /^.*x\^2.*ln.*-.*x\^2.*\/4.*\+c$/i
+          ];
+        }
+
+        currentProblem = {
+          mode: 'hard',
+          subType: 'ibp',
+          topicName: '分部積分法 (Integration by Parts)',
+          integrandTex, uTex, dvTex, duTex, vTex, answerTex,
+          primaryAnswerStr, canonicalRegexes
+        };
+
+      } else {
+        // Partial Fractions
+        const pfType = Math.floor(Math.random() * 2);
+
+        if (pfType === 0) { // ∫ 1 / (x^2 - a^2) dx => (1/2a) ln|(x-a)/(x+a)| + C
+          const a = Math.floor(Math.random() * 4) + 1; // 1, 2, 3, 4
+          const a2 = a * a;
+          const twoA = 2 * a;
+
+          const integrandTex = `\\frac{1}{x^2 - ${a2}}`;
+          const factorTex = `\\frac{1}{(x - ${a})(x + ${a})}`;
+          const decompTex = `\\frac{1}{${twoA}}\\left( \\frac{1}{x - ${a}} - \\frac{1}{x + ${a}} \\right)`;
+          
+          const fracTex = twoA === 2 ? "\\frac{1}{2}" : `\\frac{1}{${twoA}}`;
+          const answerTex = `${fracTex} \\ln\\left| \\frac{x - ${a}}{x + ${a}} \\right| + C`;
+          const primaryAnswerStr = `(1/${twoA})ln|(x-${a})/(x+${a})| + C`;
+
+          const canonicalRegexes = [
+            new RegExp(`^.*(1\\/${twoA}|${1/twoA}).*ln.*\\+c$`, 'i'),
+            new RegExp(`^.*ln\\|?\\(?(x-${a})\\/(x\\+${a})\\)?\\|?\\+c$`, 'i')
+          ];
+
+          currentProblem = {
+            mode: 'hard',
+            subType: 'pf_diff_sq',
+            topicName: '部分分式拆解 (Partial Fractions)',
+            a, a2, twoA, integrandTex, factorTex, decompTex, answerTex,
+            primaryAnswerStr, canonicalRegexes
+          };
+
+        } else { // ∫ (Ax + B) / ((x - a)(x - b)) dx
+          let a = randIntNonZero(-4, 4);
+          let b = randIntNonZero(-4, 4);
+          while (b === a) b = randIntNonZero(-4, 4);
+
+          const A_const = randIntNonZero(-3, 3);
+          const B_const = randIntNonZero(-3, 3);
+
+          // P(x) = A_const*(x - b) + B_const*(x - a)
+          // Numerator coeff: (A_const + B_const)x - (A_const*b + B_const*a)
+          const numXCoeff = A_const + B_const;
+          const numConst = -(A_const * b + B_const * a);
+
+          let numTex = "";
+          if (numXCoeff !== 0) {
+            numTex += (numXCoeff === 1) ? "x" : ((numXCoeff === -1) ? "-x" : `${numXCoeff}x`);
+            if (numConst > 0) numTex += ` + ${numConst}`;
+            else if (numConst < 0) numTex += ` - ${Math.abs(numConst)}`;
+          } else {
+            numTex = `${numConst}`;
+          }
+
+          const denTex = `(x ${a > 0 ? '- ' + a : '+ ' + Math.abs(a)})(x ${b > 0 ? '- ' + b : '+ ' + Math.abs(b)})`;
+          const integrandTex = `\\frac{${numTex}}{${denTex}}`;
+
+          const termAStr = A_const === 1 ? "" : (A_const === -1 ? "-" : `${A_const}`);
+          const termBStr = B_const === 1 ? "" : (B_const === -1 ? "-" : `${B_const}`);
+
+          const termATex = `${termAStr}\\ln|x ${a > 0 ? '- ' + a : '+ ' + Math.abs(a)}|`;
+          const termBTex = `${B_const > 0 ? '+ ' : '- '}${Math.abs(B_const) === 1 ? '' : Math.abs(B_const)}\\ln|x ${b > 0 ? '- ' + b : '+ ' + Math.abs(b)}|`;
+
+          const answerTex = `${termATex} ${termBTex} + C`;
+          const primaryAnswerStr = `${A_const}ln|x-${a}| + ${B_const}ln|x-${b}| + C`;
+
+          const canonicalRegexes = [
+            new RegExp(`^.*ln.*\\+.*ln.*\\+c$`, 'i'),
+            new RegExp(`^.*ln\\|?x.*\\+c$`, 'i')
+          ];
+
+          currentProblem = {
+            mode: 'hard',
+            subType: 'pf_general',
+            topicName: '部分分式拆解 (Partial Fractions)',
+            a, b, A_const, B_const, integrandTex, denTex, answerTex,
+            primaryAnswerStr, canonicalRegexes
+          };
+        }
+      }
+    }
+
+    // Render LaTeX Math Formulas to DOM
+    function renderProblem() {
+      if (!currentProblem) return;
+
+      const probEl = document.getElementById('math-problem');
+      const step1El = document.getElementById('step-1-math');
+      const step2El = document.getElementById('step-2-math');
+      const step3Container = document.getElementById('step-3-container');
+      const step3Title = document.getElementById('step-3-title');
+      const step3El = document.getElementById('step-3-math');
+      const step4El = document.getElementById('step-4-math');
+      const topicTag = document.getElementById('topic-tag');
+
+      if (currentProblem.mode === 'easy') {
+        const { a, b, A, B, C, valFrac } = currentProblem;
+        const polyTex = formatPoly(A, B, C);
+        const antiTex = formatAntiDerivEasy(A, B, C);
+
+        probEl.innerHTML = `$$\\int_{${a}}^{${b}} \\left( ${polyTex} \\right) \\, dx$$`;
+        step1El.innerHTML = `$$\\int_{${a}}^{${b}} \\left( ${polyTex} \\right) \\, dx$$`;
+        step2El.innerHTML = `$$F(x) = ${antiTex}$$`;
+
+        const Fb = evalAntiDeriv(A, B, C, b);
+        const Fa = evalAntiDeriv(A, B, C, a);
+        step3Container.classList.remove('hidden');
+        step3Title.innerText = "步驟 3：代入上下界計算";
+        step3El.innerHTML = `$$F(${b}) - F(${a}) = \\left( ${Fb.toTex()} \\right) - \\left( ${Fa.toTex()} \\right)$$`;
+
+        step4El.innerHTML = `$$\\int_{${a}}^{${b}} \\left( ${polyTex} \\right) \\, dx = ${valFrac.toTex()}$$`;
+
+      } else if (currentProblem.mode === 'medium') {
+        const { integrandTex, answerTex, step2Tex } = currentProblem;
+
+        probEl.innerHTML = `$$\\int \\left( ${integrandTex} \\right) \\, dx$$`;
+        step1El.innerHTML = `$$\\int \\left( ${integrandTex} \\right) \\, dx$$`;
+        step2El.innerHTML = `$$${step2Tex}$$`;
+        
+        step3Container.classList.add('hidden');
+        step4El.innerHTML = `$$\\int \\left( ${integrandTex} \\right) \\, dx = ${answerTex}$$`;
+
+      } else { // Hard Mode Step Rendering
+        topicTag.innerText = currentProblem.topicName;
+
+        if (currentProblem.subType === 'ibp') {
+          const { integrandTex, uTex, dvTex, duTex, vTex, answerTex } = currentProblem;
+
+          probEl.innerHTML = `$$\\int ${integrandTex} \\, dx$$`;
+          step1El.innerHTML = `$$\\text{使用分部積分公式：} \\int u \\, dv = uv - \\int v \\, du$$`;
+          step2El.innerHTML = `$$\\begin{aligned} u &= ${uTex}, & dv &= ${dvTex} \\\\ du &= ${duTex}, & v &= ${vTex} \\end{aligned}$$`;
+
+          step3Container.classList.remove('hidden');
+          step3Title.innerText = "步驟 3：套用分部積分公式代入";
+          step3El.innerHTML = `$$\\int ${integrandTex} \\, dx = \\left(${uTex}\\right)\\left(${vTex}\\right) - \\int \\left(${vTex}\\right) \\left(${duTex}\\right)$$`;
+
+          step4El.innerHTML = `$$\\int ${integrandTex} \\, dx = ${answerTex}$$`;
+
+        } else if (currentProblem.subType === 'pf_diff_sq') {
+          const { a, twoA, integrandTex, factorTex, decompTex, answerTex } = currentProblem;
+
+          probEl.innerHTML = `$$\\int ${integrandTex} \\, dx$$`;
+          step1El.innerHTML = `$$\\text{將分母進行因式分解：} ${integrandTex} = ${factorTex}$$`;
+          step2El.innerHTML = `$$\\text{設部分分式：} ${factorTex} = \\frac{A}{x - ${a}} + \\frac{B}{x + ${a}} \\implies A = \\frac{1}{${twoA}}, \\; B = -\\frac{1}{${twoA}}$$`;
+
+          step3Container.classList.remove('hidden');
+          step3Title.innerText = "步驟 3：拆解項個別進行積分";
+          step3El.innerHTML = `$$\\int ${decompTex} \\, dx$$`;
+
+          step4El.innerHTML = `$$\\int ${integrandTex} \\, dx = ${answerTex}$$`;
+
+        } else { // pf_general
+          const { a, b, A_const, B_const, integrandTex, denTex, answerTex } = currentProblem;
+
+          probEl.innerHTML = `$$\\int ${integrandTex} \\, dx$$`;
+          step1El.innerHTML = `$$\\text{觀察分母因式分解型態：} ${denTex}$$`;
+          step2El.innerHTML = `$$\\text{設部分分式拆解：} \\frac{A}{x ${a > 0 ? '- ' + a : '+ ' + Math.abs(a)}} + \\frac{B}{x ${b > 0 ? '- ' + b : '+ ' + Math.abs(b)}}$$`;
+
+          step3Container.classList.remove('hidden');
+          step3Title.innerText = "步驟 3：解出常數係數 A 與 B";
+          step3El.innerHTML = `$$\\text{通分對比係數得：} A = ${A_const}, \\quad B = ${B_const}$$`;
+
+          step4El.innerHTML = `$$\\int ${integrandTex} \\, dx = ${answerTex}$$`;
+        }
+      }
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise();
+      }
+    }
+
+    // Toggle Solution Visibility
+    function toggleSolution() {
+      const solutionSection = document.getElementById('solution-section');
+      const textToggle = document.getElementById('text-toggle-solution');
+
+      if (solutionSection.classList.contains('hidden')) {
+        solutionSection.classList.remove('hidden');
+        textToggle.innerText = "隱藏詳細解答";
+      } else {
+        solutionSection.classList.add('hidden');
+        textToggle.innerText = "查看詳細解答";
+      }
+    }
+
+    // Answer Evaluation & Verification System
+    function checkAnswer() {
+      const input = document.getElementById('user-answer').value.trim();
+      const feedback = document.getElementById('answer-feedback');
+
+      feedback.classList.remove('hidden', 'bg-emerald-900/60', 'text-emerald-200', 'border-emerald-600', 'bg-rose-900/60', 'text-rose-200', 'border-rose-600', 'bg-amber-900/60', 'text-amber-200', 'border-amber-600');
+      feedback.classList.add('border');
+
+      if (!input) {
+        feedback.innerText = "請先輸入您的答案！";
+        feedback.classList.add('bg-rose-900/60', 'text-rose-200', 'border-rose-600');
+        return;
+      }
+
+      if (currentMode === 'easy') {
+        // --- Easy Mode Verification ---
+        let userNum = 0, userDen = 1, isFractionFormat = false;
+
+        if (input.includes('/')) {
+          isFractionFormat = true;
+          const parts = input.split('/');
+          if (parts.length === 2) {
+            const n = parseInt(parts[0].trim(), 10);
+            const d = parseInt(parts[1].trim(), 10);
+            if (!isNaN(n) && !isNaN(d) && d !== 0) {
+              userNum = n;
+              userDen = d;
+            } else {
+              feedback.innerText = "格式錯誤！分數請輸入整數分子與分母 (例如: 31/2)。";
+              feedback.classList.add('bg-rose-900/60', 'text-rose-200', 'border-rose-600');
+              return;
+            }
+          } else {
+            feedback.innerText = "格式錯誤！分數只能含有一個斜線 (例如: 31/2)。";
+            feedback.classList.add('bg-rose-900/60', 'text-rose-200', 'border-rose-600');
+            return;
+          }
+        } else {
+          const val = parseInt(input.trim(), 10);
+          if (!isNaN(val) && input.trim() === val.toString()) {
+            userNum = val;
+            userDen = 1;
+          } else {
+            feedback.innerText = "請輸入最簡分數或整數格式 (例如: 31/2 或 5)。";
+            feedback.classList.add('bg-rose-900/60', 'text-rose-200', 'border-rose-600');
+            return;
+          }
+        }
+
+        if (userDen < 0) {
+          userNum = -userNum;
+          userDen = -userDen;
+        }
+
+        const exact = currentProblem.valFrac;
+        const isValueEqual = (userNum * exact.den === exact.num * userDen);
+
+        if (!isValueEqual) {
+          resetStreak();
+          feedback.innerText = "❌ 答案不正確，請再檢查計算！";
+          feedback.classList.add('bg-rose-900/60', 'text-rose-200', 'border-rose-600');
+          return;
+        }
+
+        const userGcd = gcd(userNum, userDen);
+        if (userGcd > 1) {
+          feedback.innerText = `⚠️ 數值正確，但請將分數約分為最簡分數！(應為: ${exact.toCanonicalString()})`;
+          feedback.classList.add('bg-amber-900/60', 'text-amber-200', 'border-amber-600');
+          return;
+        }
+
+        if (exact.den === 1 && userDen === 1 && isFractionFormat) {
+          feedback.innerText = `⚠️ 數值正確！結果為整數，請直接輸入整數 (例如: ${exact.num})。`;
+          feedback.classList.add('bg-amber-900/60', 'text-amber-200', 'border-amber-600');
+          return;
+        }
+
+        incrementStreak();
+        feedback.innerText = `🎉 答對了！定積分結果為最簡分數/整數 (${exact.toCanonicalString()})！`;
+        feedback.classList.add('bg-emerald-900/60', 'text-emerald-200', 'border-emerald-600');
+
+      } else {
+        // --- Medium & Hard Mode Verification ---
+        const cleanInput = input.replace(/\s+/g, '');
+
+        // 1. Check for + C
+        if (!/\+c$/i.test(cleanInput)) {
+          feedback.innerText = "⚠️ 不定積分別忘了常數項！請在答案最後加上 '+ C' 或 '+c'。";
+          feedback.classList.add('bg-amber-900/60', 'text-amber-200', 'border-amber-600');
+          return;
+        }
+
+        // 2. Algebraic equivalence check using regex patterns
+        let isMatch = false;
+        for (let reg of currentProblem.canonicalRegexes) {
+          if (reg.test(cleanInput)) {
+            isMatch = true;
+            break;
+          }
+        }
+
+        if (isMatch) {
+          incrementStreak();
+          feedback.innerText = `🎉 完全正確！解答為 ${currentProblem.primaryAnswerStr}`;
+          feedback.classList.add('bg-emerald-900/60', 'text-emerald-200', 'border-emerald-600');
+        } else {
+          resetStreak();
+          feedback.innerText = `❌ 答案不符，請檢查函數符號或正負號！(提示參考: ${currentProblem.primaryAnswerStr})`;
+          feedback.classList.add('bg-rose-900/60', 'text-rose-200', 'border-rose-600');
+        }
+      }
+    }
+
+    // Streak and Score Counters
+    function incrementStreak() {
+      streakCount++;
+      totalCorrectCount++;
+      document.getElementById('streak-counter').innerText = `連續答對：${streakCount} 題`;
+      document.getElementById('total-correct').innerText = totalCorrectCount;
+    }
+
+    function resetStreak() {
+      streakCount = 0;
+      document.getElementById('streak-counter').innerText = `連續答對：0 題`;
+    }
+
+    // Initialize Application
+    window.onload = function() {
+      switchMode('easy');
+    };
+  </script>
+</body>
+</html>

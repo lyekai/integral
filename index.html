@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>微積分練習 - 簡單 / 中等 / 困難模式</title>
+  <title>微積分與 ODE 練習 - 簡單 / 中等 / 困難 / 地獄模式</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- MathJax Configuration and Script -->
@@ -42,6 +42,72 @@
       background: rgba(51, 65, 85, 0.8);
       border-radius: 9999px;
     }
+    /* 地獄模式固定邊框（防止排版抖動） */
+    .hell-border-style {
+      border: 1px solid rgba(244, 63, 94, 0.8) !important;
+      box-shadow: 0 0 20px rgba(244, 63, 94, 0.35) !important;
+    }
+
+    /* ---------------------------------------------------------------- */
+    /* 橫向 (桌面版 8 欄) 與 直向 (手機版 4 欄獨立排版)                 */
+    /* ---------------------------------------------------------------- */
+
+    /* 預設桌面橫式排版 (8 欄) */
+    .calc-keypad {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    /* 手機直式響應式排版 (@media 最大寬度 640px) - 獨立精準 4 欄配置 */
+    @media (max-width: 640px) {
+      .calc-keypad {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      /* 在手機直式中，明確指定各按鍵的順序與位置：1~3 在最下、4~6 在中、7~9 在上 */
+      .key-ac { order: 1; }
+      .key-bk { order: 2; }
+      .key-lpar { order: 3; }
+      .key-rpar { order: 4; }
+
+      .key-div { order: 5; }
+      .key-mul { order: 6; }
+      .key-sub { order: 7; }
+      .key-add { order: 8; }
+
+      .key-7 { order: 9; }
+      .key-8 { order: 10; }
+      .key-9 { order: 11; }
+      .key-pow { order: 12; }
+
+      .key-4 { order: 13; }
+      .key-5 { order: 14; }
+      .key-6 { order: 15; }
+      .key-sq { order: 16; }
+
+      .key-1 { order: 17; }
+      .key-2 { order: 18; }
+      .key-3 { order: 19; }
+      .key-dot { order: 20; }
+
+      .key-0 { order: 21; grid-column: span 2; }
+      .key-empty-placeholder { order: 22; grid-column: span 2; display: none; }
+
+      /* 進階微積分按鍵在手機上收納或依序排列 */
+      .key-adv { order: 30; }
+      .ctrl-btn {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .ctrl-btn button {
+        width: 40%;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen py-6 px-3 sm:px-6 flex flex-col items-center">
@@ -50,13 +116,13 @@
   <div class="max-w-4xl w-full space-y-6">
     
     <!-- Header with Streak Counter -->
-    <header class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+    <header id="app-header" class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300">
       <div class="text-center md:text-left space-y-1">
         <h1 class="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-sky-300 to-indigo-400">
-          微積分練習挑戰
+          微積分與 ODE 練習
         </h1>
         <p class="text-slate-400 text-xs sm:text-sm">
-          包含定積分、基礎不定積分、分部積分 (Integration by Parts) 與部分分式 (Partial Fractions)
+          包含定積分、基礎不定積分、進階積分技巧與一階微分方程 (1st Order ODE)
         </p>
       </div>
 
@@ -76,31 +142,26 @@
     </header>
 
     <!-- Mode Selector Tabs -->
-    <div class="grid grid-cols-3 gap-2 p-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-inner text-xs sm:text-sm">
-      <button id="tab-easy" onclick="switchMode('easy')" class="py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-teal-600 to-sky-600 text-white shadow-lg">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        簡單 (定積分)
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-inner text-xs sm:text-sm">
+      <button id="tab-easy" onclick="switchMode('easy')" class="py-3 px-2 sm:px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-teal-600 to-sky-600 text-white shadow-lg">
+        🟢 簡單 (定積分)
       </button>
 
-      <button id="tab-medium" onclick="switchMode('medium')" class="py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-        </svg>
-        中等 (基本技巧)
+      <button id="tab-medium" onclick="switchMode('medium')" class="py-3 px-2 sm:px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        🟡 中等 (基本技巧)
       </button>
 
-      <button id="tab-hard" onclick="switchMode('hard')" class="py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-        困難 (進階技巧)
+      <button id="tab-hard" onclick="switchMode('hard')" class="py-3 px-2 sm:px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        🟠 困難 (進階技巧)
+      </button>
+
+      <button id="tab-hell" onclick="switchMode('hell')" class="py-3 px-2 sm:px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        🔴 地獄 (一階 ODE)
       </button>
     </div>
 
     <!-- Main Problem Display Card -->
-    <main class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 shadow-xl space-y-6">
+    <main id="main-card" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 shadow-xl space-y-6 transition-all duration-300">
       
       <div class="flex flex-col items-center justify-center space-y-3 border-b border-slate-800 pb-6">
         <div class="flex items-center gap-2">
@@ -119,7 +180,7 @@
       </div>
 
       <!-- Action Control Buttons -->
-      <div class="flex flex-wrap gap-3 justify-center items-center">
+      <div class="flex flex-wrap gap-3 justify-center items-center ctrl-btn">
         <button onclick="generateProblem()" class="bg-gradient-to-r from-teal-600 to-sky-600 hover:from-teal-500 hover:to-sky-500 text-white font-bold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-teal-500/20 active:scale-95 transition-all duration-200 flex items-center gap-2 text-sm sm:text-base">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 01-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
@@ -132,7 +193,11 @@
             <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
             <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
           </svg>
-          <span id="text-toggle-solution">查看詳細解答</span>
+          <span id="text-toggle-solution">查看詳解</span>
+        </button>
+
+        <button onclick="checkAnswer()" class="bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-500 hover:to-indigo-500 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg hover:shadow-teal-500/20 active:scale-95 transition-all duration-200 text-sm sm:text-base">
+          送出答案
         </button>
       </div>
 
@@ -174,7 +239,7 @@
         <!-- Feedback Alert Box -->
         <div id="answer-feedback" class="hidden text-sm font-medium rounded-xl p-3.5 border transition-all"></div>
 
-        <!-- Enhanced Virtual Keypad Panel -->
+        <!-- 工程計算機按鍵區：已移除計算機內部的送出按鈕 -->
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4 space-y-2.5 shadow-md">
           <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between border-b border-slate-800 pb-2">
             <span>工程計算機按鍵區</span>
@@ -182,52 +247,56 @@
           </div>
 
           <!-- Keypad Grid -->
-          <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1.5 sm:gap-2">
+          <div class="calc-keypad">
             
-            <!-- Mathematical Terms & Symbols -->
-            <button onclick="keypadInsert('+ C')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">+ C</button>
-            <button onclick="keypadInsert('x')" class="btn-key bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2 text-sm font-bold shadow-sm">x</button>
-            <button onclick="keypadInsert('/')" class="btn-key bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2 text-sm font-bold shadow-sm">/</button>
-            <button onclick="keypadInsert('²')" class="btn-key bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2 text-sm font-bold shadow-sm">x²</button>
-            <button onclick="keypadInsert('^')" class="btn-key bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2 text-sm font-bold shadow-sm">^</button>
-            <button onclick="keypadInsert('ln|x|')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">ln|x|</button>
-            <button onclick="keypadInsert('ln')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">ln</button>
-            <button onclick="keypadInsert('|x|')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">|x|</button>
+            <!-- 數字 1~3 (最下方排) -->
+            <button onclick="keypadInsert('1')" class="btn-key key-1 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">1</button>
+            <button onclick="keypadInsert('2')" class="btn-key key-2 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">2</button>
+            <button onclick="keypadInsert('3')" class="btn-key key-3 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">3</button>
+            
+            <!-- 數字 4~6 (中間排) -->
+            <button onclick="keypadInsert('4')" class="btn-key key-4 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">4</button>
+            <button onclick="keypadInsert('5')" class="btn-key key-5 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">5</button>
+            <button onclick="keypadInsert('6')" class="btn-key key-6 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">6</button>
 
-            <!-- Exponential & Trigonometric -->
-            <button onclick="keypadInsert('e^x')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">e^x</button>
-            <button onclick="keypadInsert('e')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">e</button>
-            <button onclick="keypadInsert('sinx')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">sinx</button>
-            <button onclick="keypadInsert('cosx')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">cosx</button>
-            <button onclick="keypadInsert('tanx')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">tanx</button>
-            <button onclick="keypadInsert('sec')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">sec</button>
-            <button onclick="keypadInsert('csc')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">csc</button>
-            <button onclick="keypadInsert('cot')" class="btn-key key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2 text-xs sm:text-sm font-bold shadow-sm">cot</button>
+            <!-- 數字 7~9 (上方排) -->
+            <button onclick="keypadInsert('7')" class="btn-key key-7 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">7</button>
+            <button onclick="keypadInsert('8')" class="btn-key key-8 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">8</button>
+            <button onclick="keypadInsert('9')" class="btn-key key-9 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">9</button>
 
-            <!-- Digits 7,8,9, Parentheses & Backspace -->
-            <button onclick="keypadInsert('7')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">7</button>
-            <button onclick="keypadInsert('8')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">8</button>
-            <button onclick="keypadInsert('9')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">9</button>
-            <button onclick="keypadInsert('(')" class="btn-key bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-2 text-base font-bold shadow-sm">(</button>
-            <button onclick="keypadInsert(')')" class="btn-key bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-2 text-base font-bold shadow-sm">)</button>
-            <button onclick="keypadInsert('-')" class="btn-key bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2 text-sm font-bold shadow-sm">-</button>
-            <button onclick="keypadBackspace()" class="btn-key col-span-2 bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-800/60 rounded-lg py-2 text-sm font-bold shadow-sm flex items-center justify-center gap-1">⌫ 倒退</button>
+            <!-- 數字 0 與小數點 -->
+            <button onclick="keypadInsert('0')" class="btn-key key-0 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">0</button>
+            <button onclick="keypadInsert('.')" class="btn-key key-dot bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-3.5 text-lg font-bold shadow-sm">.</button>
+            <div class="key-empty-placeholder"></div>
 
-            <!-- Digits 4,5,6, Operators & Clear -->
-            <button onclick="keypadInsert('4')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">4</button>
-            <button onclick="keypadInsert('5')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">5</button>
-            <button onclick="keypadInsert('6')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">6</button>
-            <button onclick="keypadInsert('+')" class="btn-key bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-2 text-base font-bold shadow-sm">+</button>
-            <button onclick="keypadInsert('*')" class="btn-key bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-2 text-base font-bold shadow-sm">×</button>
-            <button onclick="keypadInsert('.')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">.</button>
-            <button onclick="clearAnswerInput()" class="btn-key col-span-2 bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 rounded-lg py-2 text-sm font-bold shadow-sm">C 清空</button>
+            <!-- 運算與功能按鍵 -->
+            <button onclick="clearAnswerInput()" class="btn-key key-ac bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 rounded-lg py-3 text-sm font-bold shadow-sm">AC</button>
+            <button onclick="keypadBackspace()" class="btn-key key-bk bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-800/60 rounded-lg py-3 text-sm font-bold shadow-sm">⌫</button>
+            <button onclick="keypadInsert('(')" class="btn-key key-lpar bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-3 text-base font-bold shadow-sm">(</button>
+            <button onclick="keypadInsert(')')" class="btn-key key-rpar bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-3 text-base font-bold shadow-sm">)</button>
 
-            <!-- Digits 1,2,3, Zero & Submit -->
-            <button onclick="keypadInsert('1')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">1</button>
-            <button onclick="keypadInsert('2')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">2</button>
-            <button onclick="keypadInsert('3')" class="btn-key bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">3</button>
-            <button onclick="keypadInsert('0')" class="btn-key col-span-2 bg-slate-800 hover:bg-slate-750 text-slate-100 border border-slate-700/60 rounded-lg py-2.5 text-base font-bold shadow-sm">0</button>
-            <button onclick="checkAnswer()" class="btn-key col-span-3 bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-500 hover:to-indigo-500 text-white font-bold rounded-lg py-2.5 text-base shadow-md active:scale-95 transition">送出答案</button>
+            <button onclick="keypadInsert('/')" class="btn-key key-div bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-3 text-base font-bold shadow-sm">/</button>
+            <button onclick="keypadInsert('*')" class="btn-key key-mul bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-3 text-base font-bold shadow-sm">×</button>
+            <button onclick="keypadInsert('-')" class="btn-key key-sub bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-3 text-base font-bold shadow-sm">-</button>
+            <button onclick="keypadInsert('+')" class="btn-key key-add bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 rounded-lg py-3 text-base font-bold shadow-sm">+</button>
+
+            <button onclick="keypadInsert('²')" class="btn-key key-sq bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-3 text-sm font-bold shadow-sm">x²</button>
+            <button onclick="keypadInsert('^')" class="btn-key key-pow bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-3 text-sm font-bold shadow-sm">^</button>
+
+            <!-- 進階微積分函數鍵 -->
+            <button onclick="keypadInsert('+ C')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700/80 rounded-lg py-2.5 text-xs sm:text-sm font-bold shadow-sm">+ C</button>
+            <button onclick="keypadInsert('x')" class="btn-key key-adv bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700/80 rounded-lg py-2.5 text-sm font-bold shadow-sm">x</button>
+            <button onclick="keypadInsert('y')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700/80 rounded-lg py-2.5 text-sm font-bold shadow-sm">y</button>
+            <button onclick="keypadInsert('y = ')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700/80 rounded-lg py-2.5 text-xs sm:text-sm font-bold shadow-sm">y =</button>
+            <button onclick="keypadInsert('C')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700/80 rounded-lg py-2.5 text-sm font-bold shadow-sm">C</button>
+            <button onclick="keypadInsert('ln|x|')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2.5 text-xs sm:text-sm font-bold shadow-sm">ln|x|</button>
+            <button onclick="keypadInsert('ln')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2.5 text-xs sm:text-sm font-bold shadow-sm">ln</button>
+            <button onclick="keypadInsert('|x|')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2.5 text-xs sm:text-sm font-bold shadow-sm">|x|</button>
+            <button onclick="keypadInsert('e^x')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2.5 text-xs sm:text-sm font-bold shadow-sm">e^x</button>
+            <button onclick="keypadInsert('e')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700/80 rounded-lg py-2.5 text-sm font-bold shadow-sm">e</button>
+            <button onclick="keypadInsert('sinx')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2.5 text-xs sm:text-sm font-bold shadow-sm">sinx</button>
+            <button onclick="keypadInsert('cosx')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2.5 text-xs sm:text-sm font-bold shadow-sm">cosx</button>
+            <button onclick="keypadInsert('tanx')" class="btn-key key-adv key-func bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700/80 rounded-lg py-2.5 text-xs sm:text-sm font-bold shadow-sm">tanx</button>
 
           </div>
         </div>
@@ -399,18 +468,22 @@
       const tabEasy = document.getElementById('tab-easy');
       const tabMedium = document.getElementById('tab-medium');
       const tabHard = document.getElementById('tab-hard');
+      const tabHell = document.getElementById('tab-hell');
+      
+      const mainCard = document.getElementById('main-card');
       const modeBadge = document.getElementById('mode-badge');
       const modeHint = document.getElementById('mode-input-hint');
       const topicTag = document.getElementById('topic-tag');
-      const keyFuncEls = document.querySelectorAll('.key-func');
+      const keyFuncEls = document.querySelectorAll('.key-adv');
 
-      // Reset Active Tab Styles
-      [tabEasy, tabMedium, tabHard].forEach(tab => {
-        tab.className = "py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60";
+      [tabEasy, tabMedium, tabHard, tabHell].forEach(tab => {
+        tab.className = "py-3 px-2 sm:px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60";
       });
 
+      mainCard.classList.remove('hell-border-style');
+
       if (mode === 'easy') {
-        tabEasy.className = "py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-teal-600 to-sky-600 text-white shadow-lg";
+        tabEasy.className = "py-3 px-2 sm:px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-teal-600 to-sky-600 text-white shadow-lg";
         modeBadge.className = "text-xs font-semibold tracking-wider uppercase bg-teal-900/60 text-teal-300 px-3 py-1 rounded-full border border-teal-700/50";
         modeBadge.innerText = "簡單模式：二次多項式定積分";
         modeHint.innerText = "💡 請輸入最簡分數或整數（例如：31/2）";
@@ -418,18 +491,27 @@
         keyFuncEls.forEach(el => el.classList.add('opacity-40'));
 
       } else if (mode === 'medium') {
-        tabMedium.className = "py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-lg";
+        tabMedium.className = "py-3 px-2 sm:px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-lg";
         modeBadge.className = "text-xs font-semibold tracking-wider uppercase bg-sky-900/60 text-sky-300 px-3 py-1 rounded-full border border-sky-700/50";
         modeBadge.innerText = "中等模式：微積分常見函數不定積分";
         modeHint.innerText = "💡 請包含 + C（例如：3ln|x| + C 或 -2cosx + C）";
         topicTag.classList.add('hidden');
         keyFuncEls.forEach(el => el.classList.remove('opacity-40'));
 
-      } else { // Hard Mode
-        tabHard.className = "py-3 px-2 sm:px-4 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg";
+      } else if (mode === 'hard') {
+        tabHard.className = "py-3 px-2 sm:px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg";
         modeBadge.className = "text-xs font-semibold tracking-wider uppercase bg-purple-900/60 text-purple-300 px-3 py-1 rounded-full border border-purple-700/50";
         modeBadge.innerText = "困難模式：進階積分技巧 (IBP & Partial Fractions)";
         modeHint.innerText = "💡 請以 x 函數表示並包含 + C (如: x*e^x - e^x + C)";
+        topicTag.classList.remove('hidden');
+        keyFuncEls.forEach(el => el.classList.remove('opacity-40'));
+
+      } else if (mode === 'hell') {
+        tabHell.className = "py-3 px-2 sm:px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all duration-200 bg-gradient-to-r from-rose-600 to-red-700 text-white shadow-lg";
+        mainCard.classList.add('hell-border-style');
+        modeBadge.className = "text-xs font-semibold tracking-wider uppercase bg-rose-950 text-rose-300 px-3 py-1 rounded-full border border-rose-700";
+        modeBadge.innerText = "地獄模式：一階微分方程 (1st Order ODE)";
+        modeHint.innerText = "💡 通解請輸入 y = ... 並包含常數 C (如: y = C*e^(2x) 或 y = x - 1 + C*e^(-x))";
         topicTag.classList.remove('hidden');
         keyFuncEls.forEach(el => el.classList.remove('opacity-40'));
       }
@@ -485,7 +567,8 @@
 
       if (currentMode === 'easy') generateEasyProblem();
       else if (currentMode === 'medium') generateMediumProblem();
-      else generateHardProblem();
+      else if (currentMode === 'hard') generateHardProblem();
+      else generateHellProblem();
 
       renderProblem();
     }
@@ -522,7 +605,7 @@
       let canonicalRegexes = [], primaryAnswerStr = "";
 
       switch (type) {
-        case 0: // A/x
+        case 0:
           integrandTex = A === 1 ? "\\frac{1}{x}" : (A === -1 ? "-\\frac{1}{x}" : `\\frac{${A}}{x}`);
           primaryAnswerStr = A === 1 ? "ln|x| + C" : (A === -1 ? "-ln|x| + C" : `${A}ln|x| + C`);
           answerTex = A === 1 ? "\\ln|x| + C" : (A === -1 ? "-\\ln|x| + C" : `${A}\\ln|x| + C`);
@@ -530,7 +613,7 @@
           canonicalRegexes = [new RegExp(`^${A === 1 ? '' : (A === -1 ? '-' : A)}\\s*(ln\\|x\\||lnx|ln\\(x\\))\\s*\\+\\s*c$`, 'i')];
           break;
 
-        case 1: // A e^x
+        case 1:
           integrandTex = A === 1 ? "e^x" : (A === -1 ? "-e^x" : `${A} e^x`);
           primaryAnswerStr = A === 1 ? "e^x + C" : (A === -1 ? "-e^x + C" : `${A}e^x + C`);
           answerTex = A === 1 ? "e^x + C" : (A === -1 ? "-e^x + C" : `${A} e^x + C`);
@@ -538,7 +621,7 @@
           canonicalRegexes = [new RegExp(`^${A === 1 ? '' : (A === -1 ? '-' : A)}\\s*e\\^x\\s*\\+\\s*c$`, 'i')];
           break;
 
-        case 2: // A sin x
+        case 2:
           integrandTex = A === 1 ? "\\sin x" : (A === -1 ? "-\\sin x" : `${A} \\sin x`);
           const coeffCos = -A;
           primaryAnswerStr = coeffCos === 1 ? "cosx + C" : (coeffCos === -1 ? "-cosx + C" : `${coeffCos}cosx + C`);
@@ -547,7 +630,7 @@
           canonicalRegexes = [new RegExp(`^${coeffCos === 1 ? '' : (coeffCos === -1 ? '-' : coeffCos)}\\s*(cosx|cos\\(x\\))\\s*\\+\\s*c$`, 'i')];
           break;
 
-        case 3: // A cos x
+        case 3:
           integrandTex = A === 1 ? "\\cos x" : (A === -1 ? "-\\cos x" : `${A} \\cos x`);
           primaryAnswerStr = A === 1 ? "sinx + C" : (A === -1 ? "-sinx + C" : `${A}sinx + C`);
           answerTex = A === 1 ? "\\sin x + C" : (A === -1 ? "-\\sin x + C" : `${A} \\sin x + C`);
@@ -555,7 +638,7 @@
           canonicalRegexes = [new RegExp(`^${A === 1 ? '' : (A === -1 ? '-' : A)}\\s*(sinx|sin\\(x\\))\\s*\\+\\s*c$`, 'i')];
           break;
 
-        case 4: // A sec^2 x
+        case 4:
           integrandTex = A === 1 ? "\\sec^2 x" : (A === -1 ? "-\\sec^2 x" : `${A} \\sec^2 x`);
           primaryAnswerStr = A === 1 ? "tanx + C" : (A === -1 ? "-tanx + C" : `${A}tanx + C`);
           answerTex = A === 1 ? "\\tan x + C" : (A === -1 ? "-\\tan x + C" : `${A} \\tan x + C`);
@@ -563,7 +646,7 @@
           canonicalRegexes = [new RegExp(`^${A === 1 ? '' : (A === -1 ? '-' : A)}\\s*(tanx|tan\\(x\\))\\s*\\+\\s*c$`, 'i')];
           break;
 
-        case 5: // A csc^2 x
+        case 5:
           integrandTex = A === 1 ? "\\csc^2 x" : (A === -1 ? "-\\csc^2 x" : `${A} \\csc^2 x`);
           const coeffCot = -A;
           primaryAnswerStr = coeffCot === 1 ? "cotx + C" : (coeffCot === -1 ? "-cotx + C" : `${coeffCot}cotx + C`);
@@ -572,7 +655,7 @@
           canonicalRegexes = [new RegExp(`^${coeffCot === 1 ? '' : (coeffCot === -1 ? '-' : coeffCot)}\\s*(cotx|cot\\(x\\))\\s*\\+\\s*c$`, 'i')];
           break;
 
-        case 6: // A sec x tan x
+        case 6:
           integrandTex = A === 1 ? "\\sec x \\tan x" : (A === -1 ? "-\\sec x \\tan x" : `${A} \\sec x \\tan x`);
           primaryAnswerStr = A === 1 ? "secx + C" : (A === -1 ? "-secx + C" : `${A}secx + C`);
           answerTex = A === 1 ? "\\sec x + C" : (A === -1 ? "- \\sec x + C" : `${A} \\sec x + C`);
@@ -587,12 +670,11 @@
       };
     }
 
-    // 3. Hard Mode Problem Generator (IBP & Partial Fractions)
+    // 3. Hard Mode Problem Generator
     function generateHardProblem() {
-      const isIBP = Math.random() < 0.55; // 55% IBP, 45% Partial Fractions
+      const isIBP = Math.random() < 0.55;
 
       if (isIBP) {
-        // Integration by Parts
         const ibpType = Math.floor(Math.random() * 4);
         const a = randIntNonZero(-3, 3);
 
@@ -600,7 +682,7 @@
         let answerTex = "", primaryAnswerStr = "";
         let canonicalRegexes = [];
 
-        if (ibpType === 0) { // ∫ x e^{ax} dx => (x/a)e^{ax} - (1/a^2)e^{ax} + C
+        if (ibpType === 0) {
           integrandTex = a === 1 ? "x e^x" : (a === -1 ? "x e^{-x}" : `x e^{${a}x}`);
           uTex = "x";
           dvTex = a === 1 ? "e^x dx" : `e^{${a}x} dx`;
@@ -614,7 +696,6 @@
           answerTex = `${term1} ${term2} + C`;
           primaryAnswerStr = a === 1 ? "x*e^x - e^x + C" : `(x/${a})*e^(${a}x) - (1/${aSquare})*e^(${a}x) + C`;
 
-          // Dynamic RegEx pattern matching for variations
           if (a === 1) {
             canonicalRegexes = [
               /^x\*?e\^x-e\^x\+c$/i,
@@ -629,7 +710,7 @@
             ];
           }
 
-        } else if (ibpType === 1) { // ∫ x sin(ax) dx => -(x/a)cos(ax) + (1/a^2)sin(ax) + C
+        } else if (ibpType === 1) {
           integrandTex = a === 1 ? "x \\sin x" : `x \\sin(${a}x)`;
           uTex = "x";
           dvTex = a === 1 ? "\\sin x dx" : `\\sin(${a}x) dx`;
@@ -648,7 +729,7 @@
             new RegExp(`^.*sin.*-.*x.*cos.*\\+c$`, 'i')
           ];
 
-        } else if (ibpType === 2) { // ∫ x cos(ax) dx => (x/a)sin(ax) + (1/a^2)cos(ax) + C
+        } else if (ibpType === 2) {
           integrandTex = a === 1 ? "x \\cos x" : `x \\cos(${a}x)`;
           uTex = "x";
           dvTex = a === 1 ? "\\cos x dx" : `\\cos(${a}x) dx`;
@@ -667,7 +748,7 @@
             new RegExp(`^.*cos.*\\+.*x.*sin.*\\+c$`, 'i')
           ];
 
-        } else { // ∫ x ln(x) dx => (x^2 / 2) ln(x) - x^2 / 4 + C
+        } else {
           integrandTex = "x \\ln x";
           uTex = "\\ln x";
           dvTex = "x dx";
@@ -693,11 +774,10 @@
         };
 
       } else {
-        // Partial Fractions
         const pfType = Math.floor(Math.random() * 2);
 
-        if (pfType === 0) { // ∫ 1 / (x^2 - a^2) dx => (1/2a) ln|(x-a)/(x+a)| + C
-          const a = Math.floor(Math.random() * 4) + 1; // 1, 2, 3, 4
+        if (pfType === 0) {
+          const a = Math.floor(Math.random() * 4) + 1;
           const a2 = a * a;
           const twoA = 2 * a;
 
@@ -722,7 +802,7 @@
             primaryAnswerStr, canonicalRegexes
           };
 
-        } else { // ∫ (Ax + B) / ((x - a)(x - b)) dx
+        } else {
           let a = randIntNonZero(-4, 4);
           let b = randIntNonZero(-4, 4);
           while (b === a) b = randIntNonZero(-4, 4);
@@ -730,8 +810,6 @@
           const A_const = randIntNonZero(-3, 3);
           const B_const = randIntNonZero(-3, 3);
 
-          // P(x) = A_const*(x - b) + B_const*(x - a)
-          // Numerator coeff: (A_const + B_const)x - (A_const*b + B_const*a)
           const numXCoeff = A_const + B_const;
           const numConst = -(A_const * b + B_const * a);
 
@@ -769,6 +847,54 @@
             primaryAnswerStr, canonicalRegexes
           };
         }
+      }
+    }
+
+    // 4. 地獄模式題目生成器 (1st Order ODEs)
+    function generateHellProblem() {
+      const odeType = Math.random() < 0.5 ? 'separable' : 'linear';
+      const k = randIntNonZero(-3, 3);
+
+      if (odeType === 'separable') {
+        const odeTex = `\\frac{dy}{dx} = ${k === 1 ? '' : (k === -1 ? '-' : k)} y`;
+        const step1Tex = `\\text{分離變數：} \\frac{1}{y} dy = ${k === 1 ? '' : (k === -1 ? '-' : k)} dx`;
+        const step2Tex = `\\int \\frac{1}{y} dy = \\int ${k === 1 ? '' : (k === -1 ? '-' : k)} dx`;
+        const step3Tex = `\\ln|y| = ${k === 1 ? '' : (k === -1 ? '-' : k)}x + C_1 \\implies y = \\pm e^{C_1} e^{${k === 1 ? '' : (k === -1 ? '-' : k)}x}`;
+        const answerTex = `y(x) = C e^{${k === 1 ? '' : (k === -1 ? '-' : k)}x}`;
+        const primaryAnswerStr = k === 1 ? "y = C*e^x" : `y = C*e^(${k}x)`;
+
+        const canonicalRegexes = [
+          new RegExp(`^(y=)?c\\*?e\\^\\(?${k}x\\)?$`, 'i'),
+          new RegExp(`^(y=)?c\\*?e\\^\\(?${k === 1 ? '' : (k === -1 ? '-' : k)}x\\)?$`, 'i')
+        ];
+
+        currentProblem = {
+          mode: 'hell',
+          subType: 'separable',
+          topicName: '可分離變數 ODE (Separable ODE)',
+          odeTex, step1Tex, step2Tex, step3Tex, answerTex, primaryAnswerStr, canonicalRegexes
+        };
+
+      } else { // 1st Order Linear ODE
+        const odeTex = `\\frac{dy}{dx} + y = ${k}x`;
+        const step1Tex = `\\text{計算積分因子：} \\mu(x) = e^{\\int 1 \\, dx} = e^x`;
+        const step2Tex = `\\frac{d}{dx}\\left( y e^x \\right) = ${k}x e^x \\implies y e^x = \\int ${k}x e^x \\, dx`;
+        const step3Tex = `y e^x = ${k}x e^x - ${k}e^x + C`;
+        const answerTex = `y(x) = ${k}x - ${k} + C e^{-x}`;
+        const primaryAnswerStr = `y = ${k}x - ${k} + C*e^(-x)`;
+
+        const canonicalRegexes = [
+          new RegExp(`^(y=)?${k}x-${k}\\+c\\*?e\\^\\(-x\\)$`, 'i'),
+          new RegExp(`^(y=)?${k}x-${k}\\+c\\*?e\\^\\{-x\\}$`, 'i'),
+          new RegExp(`^(y=)?c\\*?e\\^\\(-x\\)\\+${k}x-${k}$`, 'i')
+        ];
+
+        currentProblem = {
+          mode: 'hell',
+          subType: 'linear',
+          topicName: '一階線性微分方程 (Linear ODE)',
+          odeTex, step1Tex, step2Tex, step3Tex, answerTex, primaryAnswerStr, canonicalRegexes
+        };
       }
     }
 
@@ -812,7 +938,7 @@
         step3Container.classList.add('hidden');
         step4El.innerHTML = `$$\\int \\left( ${integrandTex} \\right) \\, dx = ${answerTex}$$`;
 
-      } else { // Hard Mode Step Rendering
+      } else if (currentProblem.mode === 'hard') {
         topicTag.innerText = currentProblem.topicName;
 
         if (currentProblem.subType === 'ibp') {
@@ -841,7 +967,7 @@
 
           step4El.innerHTML = `$$\\int ${integrandTex} \\, dx = ${answerTex}$$`;
 
-        } else { // pf_general
+        } else {
           const { a, b, A_const, B_const, integrandTex, denTex, answerTex } = currentProblem;
 
           probEl.innerHTML = `$$\\int ${integrandTex} \\, dx$$`;
@@ -854,6 +980,18 @@
 
           step4El.innerHTML = `$$\\int ${integrandTex} \\, dx = ${answerTex}$$`;
         }
+
+      } else {
+        topicTag.innerText = currentProblem.topicName;
+        probEl.innerHTML = `$$${currentProblem.odeTex}$$`;
+        step1El.innerHTML = `$$${currentProblem.step1Tex}$$`;
+        step2El.innerHTML = `$$${currentProblem.step2Tex}$$`;
+
+        step3Container.classList.remove('hidden');
+        step3Title.innerText = "步驟 3：積分計算與常數處理";
+        step3El.innerHTML = `$$${currentProblem.step3Tex}$$`;
+
+        step4El.innerHTML = `$$${currentProblem.answerTex}$$`;
       }
 
       if (window.MathJax && window.MathJax.typesetPromise) {
@@ -868,10 +1006,10 @@
 
       if (solutionSection.classList.contains('hidden')) {
         solutionSection.classList.remove('hidden');
-        textToggle.innerText = "隱藏詳細解答";
+        textToggle.innerText = "隱藏詳解";
       } else {
         solutionSection.classList.add('hidden');
-        textToggle.innerText = "查看詳細解答";
+        textToggle.innerText = "查看詳解";
       }
     }
 
@@ -890,7 +1028,6 @@
       }
 
       if (currentMode === 'easy') {
-        // --- Easy Mode Verification ---
         let userNum = 0, userDen = 1, isFractionFormat = false;
 
         if (input.includes('/')) {
@@ -957,17 +1094,18 @@
         feedback.classList.add('bg-emerald-900/60', 'text-emerald-200', 'border-emerald-600');
 
       } else {
-        // --- Medium & Hard Mode Verification ---
         const cleanInput = input.replace(/\s+/g, '');
 
-        // 1. Check for + C
-        if (!/\+c$/i.test(cleanInput)) {
+        if (currentMode === 'hell' && !/c/i.test(cleanInput)) {
+          feedback.innerText = "⚠️ 微分方程通解別忘了常數 C！(如 y = C*e^(2x))";
+          feedback.classList.add('bg-amber-900/60', 'text-amber-200', 'border-amber-600');
+          return;
+        } else if (currentMode !== 'hell' && !/\+c$/i.test(cleanInput)) {
           feedback.innerText = "⚠️ 不定積分別忘了常數項！請在答案最後加上 '+ C' 或 '+c'。";
           feedback.classList.add('bg-amber-900/60', 'text-amber-200', 'border-amber-600');
           return;
         }
 
-        // 2. Algebraic equivalence check using regex patterns
         let isMatch = false;
         for (let reg of currentProblem.canonicalRegexes) {
           if (reg.test(cleanInput)) {
@@ -982,7 +1120,7 @@
           feedback.classList.add('bg-emerald-900/60', 'text-emerald-200', 'border-emerald-600');
         } else {
           resetStreak();
-          feedback.innerText = `❌ 答案不符，請檢查函數符號或正負號！(提示參考: ${currentProblem.primaryAnswerStr})`;
+          feedback.innerText = `❌ 答案不符，請檢查函數符號或正負號！(參考解答: ${currentProblem.primaryAnswerStr})`;
           feedback.classList.add('bg-rose-900/60', 'text-rose-200', 'border-rose-600');
         }
       }

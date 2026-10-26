@@ -330,7 +330,7 @@
           </div>
 
           <div class="space-y-1 border-t border-slate-800/80 pt-3">
-            <div class="text-xs font-semibold text-teal-400">步驟 4：最終解答</div>
+            <div id="step-4-title" class="text-xs font-semibold text-teal-400">步驟 4：最終解答</div>
             <div id="step-4-math" class="math-scroll overflow-x-auto py-1 text-base sm:text-lg font-bold text-teal-200"></div>
           </div>
 
@@ -908,6 +908,7 @@
       const step3Container = document.getElementById('step-3-container');
       const step3Title = document.getElementById('step-3-title');
       const step3El = document.getElementById('step-3-math');
+      const step4Title = document.getElementById('step-4-title');
       const step4El = document.getElementById('step-4-math');
       const topicTag = document.getElementById('topic-tag');
 
@@ -926,6 +927,7 @@
         step3Title.innerText = "步驟 3：代入上下界計算";
         step3El.innerHTML = `$$F(${b}) - F(${a}) = \\left( ${Fb.toTex()} \\right) - \\left( ${Fa.toTex()} \\right)$$`;
 
+        step4Title.innerText = "步驟 4：最終解答";
         step4El.innerHTML = `$$\\int_{${a}}^{${b}} \\left( ${polyTex} \\right) \\, dx = ${valFrac.toTex()}$$`;
 
       } else if (currentProblem.mode === 'medium') {
@@ -936,6 +938,7 @@
         step2El.innerHTML = `$$${step2Tex}$$`;
         
         step3Container.classList.add('hidden');
+        step4Title.innerText = "步驟 3：最終解答";
         step4El.innerHTML = `$$\\int \\left( ${integrandTex} \\right) \\, dx = ${answerTex}$$`;
 
       } else if (currentProblem.mode === 'hard') {
@@ -952,6 +955,7 @@
           step3Title.innerText = "步驟 3：套用分部積分公式代入";
           step3El.innerHTML = `$$\\int ${integrandTex} \\, dx = \\left(${uTex}\\right)\\left(${vTex}\\right) - \\int \\left(${vTex}\\right) \\left(${duTex}\\right)$$`;
 
+          step4Title.innerText = "步驟 4：最終解答";
           step4El.innerHTML = `$$\\int ${integrandTex} \\, dx = ${answerTex}$$`;
 
         } else if (currentProblem.subType === 'pf_diff_sq') {
@@ -965,6 +969,7 @@
           step3Title.innerText = "步驟 3：拆解項個別進行積分";
           step3El.innerHTML = `$$\\int ${decompTex} \\, dx$$`;
 
+          step4Title.innerText = "步驟 4：最終解答";
           step4El.innerHTML = `$$\\int ${integrandTex} \\, dx = ${answerTex}$$`;
 
         } else {
@@ -978,6 +983,7 @@
           step3Title.innerText = "步驟 3：解出常數係數 A 與 B";
           step3El.innerHTML = `$$\\text{通分對比係數得：} A = ${A_const}, \\quad B = ${B_const}$$`;
 
+          step4Title.innerText = "步驟 4：最終解答";
           step4El.innerHTML = `$$\\int ${integrandTex} \\, dx = ${answerTex}$$`;
         }
 
@@ -991,6 +997,7 @@
         step3Title.innerText = "步驟 3：積分計算與常數處理";
         step3El.innerHTML = `$$${currentProblem.step3Tex}$$`;
 
+        step4Title.innerText = "步驟 4：最終解答";
         step4El.innerHTML = `$$${currentProblem.answerTex}$$`;
       }
 
